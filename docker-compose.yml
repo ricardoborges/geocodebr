@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  geocodebr-api:
+    build: .
+    container_name: geocodebr-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Os pacotes em R salvam grandes caches de dados parquets no Cache Directory local
+      # Ao rodarmos a primeira requisição real de geocodificação, a lib baterá ~ GBs 
+      # de download do banco CNEFE / Parquets no background do servidor de R.
+      # Utilizando os Volumes abaixo, esses arquivos são retidos no seu PC nas pastas locais criadas
+      # assim o container subirá ativamente instantâneo rodadas subsequentes, sem atrasos.
+      - ./geocodebr-cache:/root/.cache/R/geocodebr
+      - ./geocodebr-cache-share:/root/.local/share/R/geocodebr
+    environment:
+      - R_ENV=production
