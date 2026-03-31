@@ -142,6 +142,33 @@ df_ceps <- geocodebr::busca_por_cep(
  )
 ```
 
+## REST API via Docker
+
+O **{geocodebr}** também pode ser executado como uma API REST local de alta performance através de um container Docker, ideal para integração com outros sistemas ou aplicações em outras linguagens (Python, Node, Go etc). O backend R da API é exposto nativamente usando o framework `plumber`.
+
+Para rodar o serviço, certifique-se de ter o Docker instalado e inicie usando:
+
+```bash
+docker compose up -d --build
+```
+
+Sua API será ligada com sucesso e ficará escutando no porto `http://localhost:8000`. Os grandes arquivos Parquet correspondentes ao CNEFE e outras bases geográficas irão ser baixados apenas no seu primeiro teste prático real, sendo compartilhados via volume na nova pasta local `geocodebr-cache/` imediatamente para todas as inicializações estarem sempre com latência zero (sem cold-starts).
+
+**Como testar (Exemplo):**
+Como a performance do motor baseado em DuckDB do R foi focada puramente para lidar com joins vetoriais brutos, a API **exige envios de requisição em blocos/lotes (Batching)** e reage mal caso você quebre cada endereço unitário em dezenas de loops cURL (HTTP overhead). Para a prova real de funcionamento assíncrono, faça a seguinte requisição:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/geocode" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "enderecos": [
+             { "logradouro": "Av. Presidente Vargas", "numero": 100, "municipio": "Rio de Janeiro", "estado": "RJ"},
+             { "logradouro": "Rodovia da Uva", "numero": 1200, "municipio": "Colombo", "estado": "PR"}
+           ]
+         }'
+```
+
+
 ## Nota <a href="https://www.ipea.gov.br"><img src="man/figures/ipea_logo.png" alt="IPEA" align="right" width="300"/></a>
 
 Os dados originais do CNEFE são coletados pelo Instituto Brasileiro de
